@@ -642,6 +642,17 @@ module ActiveRecord
         sql
       end
 
+      def build_insert_retrieve_sql(insert) # :nodoc:
+        quoted_first_key = quote_column_name(insert.keys.first)
+
+        sql = +"SELECT id as id"
+        sql << " FROM #{insert.model.quoted_table_name} WHERE id >= LAST_INSERT_ID()"
+        sql << " ORDER BY id"
+        sql << " LIMIT #{insert.number_of_inserts}"
+
+        sql
+      end
+
       def check_version # :nodoc:
         if database_version < "5.5.8"
           raise "Your version of MySQL (#{database_version}) is too old. Active Record supports MySQL >= 5.5.8."

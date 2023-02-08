@@ -83,6 +83,14 @@ module ActiveRecord
         true
       end
 
+      def supports_insert_returning?
+        true
+      end
+
+      def supports_insert_retrieving?
+        true
+      end
+
       # HELPER METHODS ===========================================
 
       def each_hash(result, &block) # :nodoc:

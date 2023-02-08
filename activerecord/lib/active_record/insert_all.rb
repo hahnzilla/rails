@@ -46,7 +46,26 @@ module ActiveRecord
       message = +"#{model} "
       message << "Bulk " if inserts.many?
       message << (on_duplicate == :update ? "Upsert" : "Insert")
-      connection.exec_insert_all to_sql, message
+      insert_result = connection.exec_insert_all to_sql, message
+
+      if returning && connection.supports_insert_retrieving?
+        pluck_sql = connection.build_insert_retrieve_sql(ActiveRecord::InsertAll::Builder.new(self))
+        p pluck_sql
+        pluck_result = connection.exec_query pluck_sql, "#{model} Pluck"
+
+        p pluck_result.inspect
+
+        inserts.each_with_index do |insert, index|
+          p insert.inspect
+          insert["id"] = pluck_result.rows[index].first
+
+          insert_result.rows << insert
+        end
+      end
+
+      p insert_result
+
+      insert_result
     end
 
     def updatable_columns
@@ -184,11 +203,9 @@ module ActiveRecord
         end
       end
 
-
       def to_sql
         connection.build_insert_sql(ActiveRecord::InsertAll::Builder.new(self))
       end
-
 
       def readonly_columns
         primary_keys + model.readonly_attributes.to_a
@@ -225,6 +242,10 @@ module ActiveRecord
 
         def initialize(insert_all)
           @insert_all, @model, @connection = insert_all, insert_all.model, insert_all.connection
+        end
+
+        def number_of_inserts
+          insert_all.inserts.length
         end
 
         def into
