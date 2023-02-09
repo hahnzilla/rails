@@ -552,6 +552,10 @@ module ActiveRecord
         false
       end
 
+      def supports_insert_retrieving?
+        false
+      end
+
       def supports_insert_on_duplicate_skip?
         false
       end

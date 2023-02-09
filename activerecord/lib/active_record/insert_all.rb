@@ -48,24 +48,28 @@ module ActiveRecord
       message << (on_duplicate == :update ? "Upsert" : "Insert")
       insert_result = connection.exec_insert_all to_sql, message
 
+      p returning
+      p insert_result
+      p inserts
+
       if returning && connection.supports_insert_retrieving?
         pluck_sql = connection.build_insert_retrieve_sql(ActiveRecord::InsertAll::Builder.new(self))
-        p pluck_sql
         pluck_result = connection.exec_query pluck_sql, "#{model} Pluck"
 
-        p pluck_result.inspect
+        p pluck_result
 
+        raise "pluck result mismatch" if pluck_result.rows.length != inserts.length
+
+        insert_result.columns << "id"
         inserts.each_with_index do |insert, index|
-          p insert.inspect
           insert["id"] = pluck_result.rows[index].first
 
           insert_result.rows << insert
         end
       end
 
-      p insert_result
-
-      insert_result
+      pluck_result
+      # insert_result
     end
 
     def updatable_columns

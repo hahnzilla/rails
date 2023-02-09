@@ -643,8 +643,6 @@ module ActiveRecord
       end
 
       def build_insert_retrieve_sql(insert) # :nodoc:
-        quoted_first_key = quote_column_name(insert.keys.first)
-
         sql = +"SELECT id as id"
         sql << " FROM #{insert.model.quoted_table_name} WHERE id >= LAST_INSERT_ID()"
         sql << " ORDER BY id"
